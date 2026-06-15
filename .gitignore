@@ -1,0 +1,13 @@
+.env
+.venv/
+.node/
+__pycache__/
+.pytest_cache/
+node_modules/
+.next/
+dist/
+data/lake/
+*.pyc
+*.log
+.tmp_dagster_home*/
+.dagster_home/

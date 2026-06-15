@@ -1,0 +1,76 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: medintel
+      POSTGRES_USER: medintel
+      POSTGRES_PASSWORD: medintel
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/hetzner/postgres_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medintel -d medintel"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  qdrant:
+    image: qdrant/qdrant:v1.9.7
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  pipeline:
+    build:
+      context: .
+      dockerfile: pipeline/Dockerfile
+    profiles: ["pipeline"]
+    environment:
+      DATABASE_URL: postgresql://medintel:medintel@postgres:5432/medintel
+      LOCAL_DATA_ROOT: /app/data/lake
+      QDRANT_URL: http://qdrant:6333
+      SPARK_MASTER: local[*]
+      SPARK_LOCAL_IP: 127.0.0.1
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - postgres
+      - qdrant
+
+  backend:
+    build: ./backend
+    profiles: ["app"]
+    environment:
+      DATABASE_URL: postgresql://medintel:medintel@postgres:5432/medintel
+      QDRANT_URL: http://qdrant:6333
+      BACKEND_PORT: 4000
+      MEDINTEL_RUN_ID: local-real-small
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./data:/data:ro
+    depends_on:
+      - postgres
+      - qdrant
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:4000
+    profiles: ["app"]
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      FRONTEND_PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  qdrant_data:

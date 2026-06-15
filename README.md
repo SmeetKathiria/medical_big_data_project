@@ -22,7 +22,7 @@ The quality review table makes failed checks inspectable instead of hiding them 
 
 The MedIntel Lens flow keeps the review interaction focused: ask a source-grounded question, watch the brief assemble, then inspect cited documents and ranking signals.
 
-<video src="docs/assets/readme/medintel-lens-review-flow.mp4" controls autoplay muted loop playsinline width="100%"></video>
+[Watch the MedIntel Lens review flow demo](docs/assets/readme/medintel-lens-review-flow.mp4)
 
 ## What MedIntel Does
 
